@@ -22,6 +22,15 @@ export function pendingAbort(signal: AbortSignal | null | undefined, onAbort: ()
     reset: () => void;
 };
 /**
+ * The error an aborted operation should reject with: the signal's own
+ * `reason` (what `fetch()` and other web APIs use), falling back to a
+ * standard AbortError for runtimes without `AbortSignal.reason`.
+ *
+ * @param {AbortSignal | null | undefined} signal
+ * @returns {any}
+ */
+export function abortReason(signal: AbortSignal | null | undefined): any;
+/**
  * Standardized AbortError factory.
  * Works in browsers and Node runtimes that may not have DOMException.
  *
