@@ -203,6 +203,61 @@ describe('retry', () => {
     assert.deepEqual(clock.sleeps, [50, 50]);
   });
 
+  describe('numeric jitter (proportional ±)', () => {
+    const run = async (opts) => {
+      const clock = fakeClock();
+      await retry(failing(), { attempts: 2, delay: 1000, sleep: clock.sleep, ...opts }).catch(() => { });
+      return clock.sleeps;
+    };
+
+    test('bounds at random() = 0, 0.5 and ~1', async () => {
+      assert.deepEqual(await run({ jitter: 0.15, random: () => 0 }), [850]);
+      assert.deepEqual(await run({ jitter: 0.15, random: () => 0.5 }), [1000]);
+      assert.deepEqual(await run({ jitter: 0.15, random: () => 0.999999 }), [1150]);
+    });
+
+    test('result is rounded to whole ms', async () => {
+      assert.deepEqual(await run({ delay: 333, jitter: 0.1, random: () => 0.25 }), [316]);
+    });
+
+    test('jitter: 0 leaves delays unchanged', async () => {
+      assert.deepEqual(await run({ attempts: 4, delay: 100, backoff: true, jitter: 0, random: () => 0 }), [100, 200, 400]);
+    });
+
+    test('jitter: 1 can reach 0 but never goes negative', async () => {
+      assert.deepEqual(await run({ jitter: 1, random: () => 0 }), [0]);
+    });
+
+    test('applied after the maxDelay cap, then re-capped by maxDelay', async () => {
+      // exponential 1000, 2000, 4000 -> capped at 1500 -> jitter ±20%
+      assert.deepEqual(
+        await run({ attempts: 4, backoff: true, maxDelay: 1500, jitter: 0.2, random: () => 0 }),
+        [800, 1200, 1200]
+      );
+      assert.deepEqual(
+        await run({ attempts: 4, backoff: true, maxDelay: 1500, jitter: 0.2, random: () => 1 }),
+        [1200, 1500, 1500]
+      );
+    });
+
+    test('delayFirst is not jittered', async () => {
+      assert.deepEqual(await run({ delayFirst: true, jitter: 0.5, random: () => 0 }), [1000, 500]);
+    });
+
+    test('invalid numbers reject with RangeError before any attempt', async () => {
+      for (const jitter of [-0.1, 1.5, NaN, Infinity]) {
+        let calls = 0;
+        await assert.rejects(retry(() => { calls++; }, { jitter }), RangeError);
+        assert.equal(calls, 0);
+      }
+    });
+
+    test('string and boolean modes are unchanged', async () => {
+      assert.deepEqual(await run({ jitter: true, random: () => 0.5 }), [500]);
+      assert.deepEqual(await run({ jitter: 'equal', random: () => 0 }), [500]);
+    });
+  });
+
   test('delayFirst: true waits `delay` before the first attempt', async () => {
     const clock = fakeClock();
     const starts = [];

@@ -232,7 +232,7 @@ await retry(fetchData, {
 | `backoff` | `false` | `false`/`'fixed'`, `'linear'` (`delay * (n+1)`), `true`/`'exponential'` (`delay * factor^n`). |
 | `factor` | `2` | Exponential multiplier. |
 | `maxDelay` | none | Cap applied to every computed delay. |
-| `jitter` | `false` | `true`/`'full'`, `'equal'` or `'decorrelated'`. Delays are rounded to whole ms. |
+| `jitter` | `false` | `true`/`'full'`, `'equal'`, `'decorrelated'`, or a number `j` in `[0, 1]` for proportional ±j jitter (`delay * (1 + (random()*2 - 1) * j)`, applied after the `maxDelay` cap and re-capped by it, never below 0). Other numbers or `NaN` reject with a `RangeError` before any attempt. `delayFirst` is never jittered. Delays are rounded to whole ms. |
 | `delayFirst` | `false` | Wait before the first attempt: `true` uses `delay`, or pass a duration. |
 | `timeout` | none | Overall deadline from the call. No retry starts after it; an in-flight attempt is not interrupted and the first attempt always runs. |
 | `isSuccess(result, attempt)` | none | Return `false` to treat a resolved result as a failure and retry. |
@@ -266,6 +266,19 @@ const response = await retry(() => sendMessage(tabId, msg), {
   maxDelay: '2s',
   isSuccess: (res) => res?.ok === true,
   onAttempt: (attempt, elapsed) => console.debug('attempt', attempt, Math.round(elapsed), 'ms'),
+});
+```
+
+Exponential backoff with ±15% proportional jitter:
+
+```js
+await retry(poll, {
+  attempts: 5,
+  delay: 200,
+  backoff: true,
+  factor: 1.6,
+  maxDelay: '1500ms',
+  jitter: 0.15, // each wait lands within 85%..115% of its computed delay
 });
 ```
 

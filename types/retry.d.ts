@@ -22,7 +22,12 @@
  *        linear = delay*(n+1), exponential (true) = delay*factor^n.
  * @param {number} [options.factor=2] - exponential multiplier
  * @param {string|number} [options.maxDelay] - cap for each computed delay
- * @param {boolean|'full'|'equal'|'decorrelated'} [options.jitter=false] - jitter strategy
+ * @param {boolean|number|'full'|'equal'|'decorrelated'} [options.jitter=false] - jitter strategy.
+ *        A number j in [0, 1] applies proportional �j jitter:
+ *        delay * (1 + (random()*2 - 1) * j), after the maxDelay cap and then
+ *        re-capped by maxDelay, clamped to >= 0 and rounded. Other numbers
+ *        (or NaN) reject with a RangeError before any attempt.
+ *        `delayFirst` is never jittered.
  * @param {boolean|string|number} [options.delayFirst=false]
  *        Wait before the first attempt (`true` = `delay`, or an explicit duration).
  * @param {string|number} [options.timeout] - overall deadline measured from the call.
@@ -49,7 +54,7 @@ export function retry<T>(fn: (attempt: number) => T | Promise<T>, { attempts, de
     backoff?: boolean | "fixed" | "exponential" | "linear" | undefined;
     factor?: number | undefined;
     maxDelay?: string | number | undefined;
-    jitter?: boolean | "full" | "equal" | "decorrelated" | undefined;
+    jitter?: number | boolean | "full" | "equal" | "decorrelated" | undefined;
     delayFirst?: string | number | boolean | undefined;
     timeout?: string | number | undefined;
     signal?: AbortSignal | undefined;

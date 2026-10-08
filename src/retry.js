@@ -28,7 +28,12 @@ import { sleep as defaultSleep, toDelay } from './sleep.js';
  *        linear = delay*(n+1), exponential (true) = delay*factor^n.
  * @param {number} [options.factor=2] - exponential multiplier
  * @param {string|number} [options.maxDelay] - cap for each computed delay
- * @param {boolean|'full'|'equal'|'decorrelated'} [options.jitter=false] - jitter strategy
+ * @param {boolean|number|'full'|'equal'|'decorrelated'} [options.jitter=false] - jitter strategy.
+ *        A number j in [0, 1] applies proportional ±j jitter:
+ *        delay * (1 + (random()*2 - 1) * j), after the maxDelay cap and then
+ *        re-capped by maxDelay, clamped to >= 0 and rounded. Other numbers
+ *        (or NaN) reject with a RangeError before any attempt.
+ *        `delayFirst` is never jittered.
  * @param {boolean|string|number} [options.delayFirst=false]
  *        Wait before the first attempt (`true` = `delay`, or an explicit duration).
  * @param {string|number} [options.timeout] - overall deadline measured from the call.
@@ -78,6 +83,10 @@ export async function retry(
     if (signal?.aborted) throw abortReason(signal);
   };
   throwIfAborted();
+
+  if (typeof jitter === 'number' && !(jitter >= 0 && jitter <= 1)) {
+    throw new RangeError(`retry: numeric jitter must be within [0, 1], got: ${jitter}`);
+  }
 
   const baseDelay = parseDuration(delay);
   const maxDelayMs = maxDelay != null ? parseDuration(maxDelay) : Infinity;
@@ -157,11 +166,17 @@ class RetryError extends Error {
  * - 'full':     random(0, cap)
  * - 'equal':    cap/2 + random(0, cap/2)
  * - 'decorrelated': random(baseDelay, prevSleep*3) (clamped)
+ * - number j:   cap * (1 ± j), re-capped by maxDelay, >= 0
  */
 function computeSleep({ expDelay, baseDelay, maxDelayMs, jitter, random, prevSleep }) {
   const cap = Math.min(expDelay, maxDelayMs);
 
   if (!jitter) return cap;
+
+  if (typeof jitter === 'number') {
+    const spread = randBetween(-1, 1, random) * jitter;
+    return Math.min(maxDelayMs, Math.max(0, cap * (1 + spread)));
+  }
 
   const mode = jitter === true ? 'full' : jitter;
 
