@@ -47,6 +47,8 @@
   "types": "./types/index.d.ts",
   "scripts": {
     "dev": "serve testing",
+    "test": "node --test testing/*.test.mjs && npm run build && npm run test:node",
+    "test:unit": "node --test testing/*.test.mjs",
     "test:node": "node testing/node-harness.mjs",
     "build": "node build.js",
     "types": "tsc",
