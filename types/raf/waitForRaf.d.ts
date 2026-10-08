@@ -8,7 +8,7 @@
  * @param {Function} condition - Function returning truthy when complete
  * @param {Object} [options]
  * @param {string|number} [options.timeout] - Optional max time to wait
- * @param {AbortSignal} [options.signal] - Optional AbortSignal to cancel waiting
+ * @param {AbortSignal} [options.signal] - Optional AbortSignal; rejects with `signal.reason`
  * @param {boolean} [options.immediate=false] - If true, evaluate condition immediately before first frame
  * @returns {Promise<void>} Resolves when condition is met, rejects on timeout/abort
  */

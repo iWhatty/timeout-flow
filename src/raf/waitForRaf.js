@@ -1,6 +1,6 @@
 // ./raf/waitForRaf.js
 import { parseDuration } from '../parseDuration.js';
-import { attachAbort, createAbortError } from '../abort.js';
+import { attachAbort, abortReason } from '../abort.js';
 
 /**
  * Waits for a condition to return truthy, polling each frame.
@@ -12,7 +12,7 @@ import { attachAbort, createAbortError } from '../abort.js';
  * @param {Function} condition - Function returning truthy when complete
  * @param {Object} [options]
  * @param {string|number} [options.timeout] - Optional max time to wait
- * @param {AbortSignal} [options.signal] - Optional AbortSignal to cancel waiting
+ * @param {AbortSignal} [options.signal] - Optional AbortSignal; rejects with `signal.reason`
  * @param {boolean} [options.immediate=false] - If true, evaluate condition immediately before first frame
  * @returns {Promise<void>} Resolves when condition is met, rejects on timeout/abort
  */
@@ -24,7 +24,7 @@ export function waitForRaf(condition, { timeout, signal, immediate = false } = {
     }
 
     if (signal?.aborted) {
-      reject(createAbortError());
+      reject(abortReason(signal));
       return;
     }
 
@@ -41,7 +41,7 @@ export function waitForRaf(condition, { timeout, signal, immediate = false } = {
 
     const onAbort = () => {
       cleanup();
-      reject(createAbortError());
+      reject(abortReason(signal));
     };
 
     const cleanupAbort = attachAbort(signal, onAbort);
