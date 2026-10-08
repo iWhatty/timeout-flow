@@ -2,7 +2,13 @@
 
 > Initial cut seeded from `git log` by the host repo's `tools/seed-changelogs.mjs` script. Version groupings infer release boundaries from tags and commit subjects; rough cuts are expected — review and tighten as part of normal maintenance.
 
-## Unreleased — 2026-05-19
+## 0.0.20 — 2026-10-08
+
+- feat: `sleep(duration, { signal })` promise delay (also `timeout-flow/sleep`); NaN/negative wait 0 ms like `setTimeout`
+- feat(retry): `'fixed' | 'linear' | 'exponential'` backoff, numeric ±j jitter, `delayFirst`, overall `timeout`, `isSuccess`, `onAttempt`, injectable `sleep`/`now`, `attempts: Infinity`, `RetryError`
+- feat(waitFor): async conditions without overlap, exact timeout, resolves with the condition's value; timeout error named `TimeoutError`
+- fix: negative `after()`/`every()` delays now fire like `setTimeout`; `abort(reason)` rejects with that reason
+- test: `node:test` suite with mocked timers (`npm test`)
 
 - docs(README): apply @whatty README template + rename ReadME.md → README.md  `080ee78`
 - chore(license): finalize AGPL-3.0 + WATT3D Additional Terms metadata  `c819763`
