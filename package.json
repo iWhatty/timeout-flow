@@ -1,6 +1,6 @@
 {
   "name": "timeout-flow",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "type": "module",
   "description": "Fluent, composable, pauseable JavaScript timers and time control flows, plus RAF utilities for frame-based logic.",
   "keywords": [
@@ -42,6 +42,7 @@
     "./every":          "./src/every.js",
     "./debounce":       "./src/debounce.js",
     "./throttle":       "./src/throttle.js",
+    "./sleep":          "./src/sleep.js",
     "./retry":          "./src/retry.js",
     "./wait-for":       "./src/waitFor.js",
     "./flow":           "./src/TimeoutFlow.js",
@@ -59,6 +60,8 @@
   "types": "./types/index.d.ts",
   "scripts": {
     "dev": "serve testing",
+    "test": "node --test testing/*.test.mjs && npm run build && npm run test:node",
+    "test:unit": "node --test testing/*.test.mjs",
     "test:node": "node testing/node-harness.mjs",
     "build": "node build.js",
     "types": "tsc",

@@ -11,6 +11,7 @@ export { after } from './after.js';
 export { every } from './every.js';
 
 
+export { sleep } from './sleep.js';
 export { waitFor } from './waitFor.js';
 export { retry } from './retry.js';
 
