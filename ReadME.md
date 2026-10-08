@@ -181,9 +181,32 @@ onScroll.flush();
 
 ---
 
+## sleep()
+
+Promise-based delay with the same duration format as everything else.
+
+```js
+import { sleep } from 'timeout-flow';
+
+await sleep('500ms');
+await sleep(250);
+
+// Cancelable: rejects with signal.reason (an AbortError by default)
+// and clears its timer.
+const ac = new AbortController();
+await sleep('10s', { signal: ac.signal });
+```
+
+* Numbers behave like `setTimeout`: `NaN` and negative values wait 0 ms.
+* Huge values (including `Infinity`) are capped at ~24.8 days instead of
+  overflowing and firing immediately.
+* Invalid strings (e.g. `'soon'`) reject; `sleep()` never throws synchronously.
+
+---
+
 ## retry()
 
-Retry async operations with backoff + jitter.
+Retry sync or async work with delays, backoff, jitter, deadlines and hooks.
 
 ```js
 import { retry } from 'timeout-flow';
@@ -202,16 +225,107 @@ await retry(fetchData, {
 });
 ```
 
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `attempts` | `3` | Total attempts including the first. `Infinity` is allowed (pair it with `timeout`). |
+| `delay` | `'500ms'` | Base delay between attempts. |
+| `backoff` | `false` | `false`/`'fixed'`, `'linear'` (`delay * (n+1)`), `true`/`'exponential'` (`delay * factor^n`). |
+| `factor` | `2` | Exponential multiplier. |
+| `maxDelay` | none | Cap applied to every computed delay. |
+| `jitter` | `false` | `true`/`'full'`, `'equal'` or `'decorrelated'`. Delays are rounded to whole ms. |
+| `delayFirst` | `false` | Wait before the first attempt: `true` uses `delay`, or pass a duration. |
+| `timeout` | none | Overall deadline from the call. No retry starts after it; an in-flight attempt is not interrupted and the first attempt always runs. |
+| `isSuccess(result, attempt)` | none | Return `false` to treat a resolved result as a failure and retry. |
+| `shouldRetry(error, attempt)` | none | Return `false` to stop retrying. |
+| `onAttempt(attempt, elapsedMs)` | none | Called before every attempt. |
+| `onRetry(error, attempt, delayMs)` | none | Called after deciding to retry, before waiting. |
+| `signal` | none | Abort waiting and further attempts. |
+| `sleep(ms, { signal })` | built-in `sleep` | Injectable wait, e.g. for fake-timer tests. |
+| `now()` | `performance.now` | Injectable clock used for `timeout`. |
+| `random()` | `Math.random` | Injectable RNG for jitter. |
+
+Attempt numbers are **0-based** everywhere (`fn(attempt)`, hooks, predicates).
+
+Outcome:
+
+* Resolves with the first successful result.
+* Otherwise rejects with the **last failure**: the last thrown error as-is, or,
+  if the last attempt resolved with a result `isSuccess` rejected, an error
+  with `name: 'RetryError'`, `.result` (that last result) and `.attempts`.
+* On abort, rejects with `signal.reason` (an `AbortError` by default).
+
+### Retry recipes
+
+Retry until a result looks right, with a little log line per attempt:
+
+```js
+const response = await retry(() => sendMessage(tabId, msg), {
+  attempts: 4,
+  delay: 200,
+  backoff: 'exponential',
+  maxDelay: '2s',
+  isSuccess: (res) => res?.ok === true,
+  onAttempt: (attempt, elapsed) => console.debug('attempt', attempt, Math.round(elapsed), 'ms'),
+});
+```
+
+Time-bounded retry (deadline instead of an attempt count):
+
+```js
+await retry(() => connect(), {
+  attempts: Infinity,
+  delay: '250ms',
+  timeout: '5s',
+});
+```
+
+Give something a moment to settle before the first try, and stop on fatal errors:
+
+```js
+await retry(loadConfig, {
+  delayFirst: '100ms',
+  attempts: 3,
+  backoff: 'linear',
+  shouldRetry: (err) => err.name !== 'SyntaxError',
+});
+```
+
+Return a result object instead of throwing:
+
+```js
+const outcome = await retry(task, { attempts: 3 }).then(
+  (value) => ({ ok: true, value }),
+  (error) => ({ ok: false, error, value: error?.result })
+);
+```
+
+Deterministic tests without real timers:
+
+```js
+let clock = 0;
+const waits = [];
+
+await retry(task, {
+  attempts: 4,
+  delay: 100,
+  backoff: true,
+  now: () => clock,
+  sleep: async (ms) => { waits.push(ms); clock += ms; },
+}).catch(() => {});
+
+// waits -> [100, 200, 400]
+```
+
 ---
 
 ## waitFor()
 
-Wait until a condition becomes true.
+Wait until a condition becomes truthy. Resolves with the condition's value.
 
 ```js
 import { waitFor } from 'timeout-flow';
 
-await waitFor(function checkLoaded() {
+const el = await waitFor(function findLoaded() {
   return document.querySelector('#loaded');
 }, {
   interval: '250ms',
@@ -219,6 +333,21 @@ await waitFor(function checkLoaded() {
   immediate: true
 });
 ```
+
+Timing model:
+
+* The first check runs after `interval` unless `immediate: true`.
+* Conditions may be async; the next check is scheduled `interval` after the
+  previous one settles, so checks never overlap.
+* `timeout` is measured from the call and has its own timer, so it is not
+  rounded up to the next poll. At the deadline a sync condition gets one final
+  check, so success at exactly `timeout` counts (`elapsed >= timeout` times out
+  only if the condition is still falsy). It rejects with an `Error` named
+  `'TimeoutError'` (message `'waitFor timed out'`).
+* `signal` rejects with `signal.reason`.
+
+`waitForRaf()` checks once per animation frame and measures `timeout` from the
+first frame's timestamp (RAF time), timing out once `elapsed >= timeout`.
 
 ---
 
@@ -313,6 +442,7 @@ import {
   every,
   debounce,
   throttle,
+  sleep,
   retry,
   waitFor,
   flow,
