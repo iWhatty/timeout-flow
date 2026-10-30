@@ -1,11 +1,10 @@
 # timeout-flow
 
-[![npm](https://img.shields.io/npm/v/timeout-flow)](https://www.npmjs.com/package/timeout-flow)
-[![downloads](https://img.shields.io/npm/dm/timeout-flow)](https://www.npmjs.com/package/timeout-flow)
-[![bundle size](https://img.shields.io/bundlephobia/minzip/timeout-flow)](https://bundlephobia.com/package/timeout-flow)
-[![license](https://img.shields.io/npm/l/timeout-flow)](https://github.com/iWhatty/timeout-flow/blob/main/LICENSE)
-[![stars](https://img.shields.io/github/stars/iWhatty/timeout-flow?style=social)](https://github.com/iWhatty/timeout-flow)
-[![types](https://img.shields.io/npm/types/timeout-flow)](https://www.npmjs.com/package/timeout-flow)
+[![npm](https://badgen.net/npm/v/timeout-flow)](https://www.npmjs.com/package/timeout-flow)
+[![downloads](https://badgen.net/npm/dm/timeout-flow)](https://www.npmjs.com/package/timeout-flow)
+[![license](https://badgen.net/static/license/AGPL-3.0%20%2B%20terms/blue)](https://github.com/iWhatty/timeout-flow/blob/main/LICENSE)
+[![stars](https://badgen.net/github/stars/iWhatty/timeout-flow)](https://github.com/iWhatty/timeout-flow)
+[![types](https://badgen.net/npm/types/timeout-flow)](https://www.npmjs.com/package/timeout-flow)
 
 Fluent, human-readable time control for JavaScript. A modern, composable upgrade to `setTimeout` and `setInterval` with chaining, conditional logic, pause/resume control, retries, and RAF utilities.
 
