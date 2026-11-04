@@ -20,6 +20,10 @@
   ],
   "author": "WATT3D <WATT3D@protonmail.com>",
   "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/iWhatty/timeout-flow#readme",
+  "bugs": {
+    "url": "https://github.com/iWhatty/timeout-flow/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/iWhatty/timeout-flow.git"
@@ -65,7 +69,8 @@
     "test:node": "node testing/node-harness.mjs",
     "build": "node build.js",
     "types": "tsc",
-    "prepub": "npm run build && npm run types"
+    "prepub": "npm run build && npm run types",
+    "prepublishOnly": "npm test && npm run types"
   },
   "devDependencies": {
     "esbuild": "^0.25.3",

@@ -33,3 +33,6 @@ coverage/
 # DEV UTILS
 context.txt
 context-js.bat
+
+# Packed tarballs
+*.tgz
