@@ -28,10 +28,10 @@ export class TimerBase {
     pause(): void;
     /**
      * Resume the timer using the remaining time (or an override delay).
-     * @param {Function} callback - Called when time completes
+     * @param {Function} [callback] - Called when time completes; defaults to the previous callback
      * @param {number|null} [overrideDelay=null] - Optional custom delay in ms
      */
-    resume(callback: Function, overrideDelay?: number | null): void;
+    resume(callback?: Function, overrideDelay?: number | null): void;
     /**
      * Cancel the timer immediately (terminal).
      */

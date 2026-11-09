@@ -1,9 +1,8 @@
 // ./raf/everyRaf.js
-import { resolveDelayFnOptions } from '../resolveDelayAndFn.js';
+import { resolveDelayFnOptions, isPlainOptions } from '../resolveDelayAndFn.js';
 import { attachAbort } from '../abort.js';
 import { now } from '../now.js';
 
-const isPlainOptions = (v) => v != null && typeof v === 'object' && !Array.isArray(v);
 
 /**
  * Repeats a function every N milliseconds using requestAnimationFrame.
@@ -153,7 +152,7 @@ export function everyRaf(a, b, c, d, e) {
             finish();
             return false;
         }
-        return true;
+        return running && !finished;
     };
 
     const tick = (ts) => {
@@ -184,8 +183,7 @@ export function everyRaf(a, b, c, d, e) {
         if (step === 0) {
             // If interval is 0ms, treat as "once per frame"
             remainingToNext = 0;
-            fire();
-            rafId = requestAnimationFrame(tick);
+            if (fire()) rafId = requestAnimationFrame(tick);
             return;
         }
 

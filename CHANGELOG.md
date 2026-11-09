@@ -2,6 +2,11 @@
 
 What changed for people using the package, per release. Entries before 0.0.20 were reconstructed from git history.
 
+## Unreleased
+
+- Fix: `after()` and flow steps retain their callbacks after pause/resume.
+- Fix: `everyRaf()` stops scheduling frames after completion, cancellation, abort, or pause inside a callback.
+
 ## 0.0.20 — 2026-10-08
 
 - `sleep(duration, { signal })`, a promise delay, also at `timeout-flow/sleep`.

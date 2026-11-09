@@ -1,7 +1,7 @@
 // ./raf/throttleRaf.js
 import { pendingAbort } from '../abort.js';
+import { isPlainOptions } from '../resolveDelayAndFn.js';
 
-const isPlainOptions = (v) => v != null && typeof v === 'object' && !Array.isArray(v);
 
 /**
  * Throttles a function using `requestAnimationFrame`, with optional frame skipping.

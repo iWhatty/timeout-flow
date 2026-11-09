@@ -1,31 +1,7 @@
 // ./src/resolveDelayAndFn.js
 import { parseDuration } from './parseDuration.js';
 
-const isPlainOptions = (v) => v != null && typeof v === 'object' && !Array.isArray(v);
-
-/**
- * Resolves flexible (fn, delay) or (delay, fn) inputs.
- *
- * NOTE: This helper is intentionally strict:
- * - It requires an explicit delay (2-arg form).
- * - Use `resolveDelayFnOptions()` for overloads that allow `(fn, options)` or default delays.
- *
- * @param {Function|string|number} a - function or duration
- * @param {Function|string|number} b - function or duration
- * @returns {{ fn: Function, delay: number }}
- */
-export function resolveDelayAndFn(a, b) {
-  // Keep legacy semantics but delegate parsing/validation.
-  const { fn, delay } = resolveDelayFnOptions(a, b, undefined, undefined);
-
-  // If someone called resolveDelayAndFn(fn) by mistake, throw a clearer error.
-  // (parseDuration(undefined) would be a confusing failure mode.)
-  if (b == null && typeof a === 'function') {
-    throw new TypeError('Expected a delay as the second argument (e.g. debounce(fn, "250ms"))');
-  }
-
-  return { fn, delay };
-}
+export const isPlainOptions = (v) => v != null && typeof v === 'object' && !Array.isArray(v);
 
 /**
  * Resolves flexible overloads and returns `{ fn, delay, options }`.

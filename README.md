@@ -51,6 +51,13 @@ ctrl.cancel();
 
 ## API
 
+### `parseDuration(input)`
+
+Convert a finite number of milliseconds or a duration string to milliseconds.
+Strings support `ms`, `s`, `m`, and `h`, decimal values, case-insensitive units,
+and surrounding whitespace. Invalid strings and non-finite numbers throw.
+Negative numbers are accepted; negative strings are not.
+
 ### `after(duration, fn, options?)`
 
 Run once after a delay.
@@ -282,9 +289,9 @@ Timing model:
 `waitForRaf()` checks once per animation frame and measures `timeout` from the
 first frame's timestamp (RAF time), timing out once `elapsed >= timeout`.
 
-### `flow()`
+### `flow(options?)`
 
-Build declarative time flows.
+Build declarative time flows. Accepts `{ signal }` for cancellation.
 
 ```js
 import { flow } from 'timeout-flow';
@@ -321,6 +328,16 @@ onScroll.cancel();
 onScroll.flush();
 ```
 
+The RAF timers and debounce accept both `(duration, fn, options?)` and
+`(fn, duration, options?)`; `debounceRaf(fn, options?)` defaults to 0 ms.
+`everyRaf` accepts `max` and `runImmediately`. `throttleRaf(fn, frameSkip?, options?)`
+runs after `frameSkip + 1` frames, using the latest arguments by default;
+`{ trailing: false }` keeps the first call instead. RAF debounce and throttle
+provide `cancel()` and `flush()`. `waitForRaf(condition, { timeout, signal, immediate })`
+requires a synchronous condition and resolves with `undefined`, not its value.
+RAF utilities require a browser RAF implementation or a polyfill.
+`afterRaf` with a zero or negative duration invokes its callback synchronously.
+
 ### Controllers
 
 Most time-based primitives return a controller object:
@@ -331,12 +348,16 @@ const ctrl = after('1s', () => console.log('done'));
 ctrl.pause();
 ctrl.resume();
 ctrl.cancel();
-ctrl.reset?.();
+ctrl.reset();
 
 console.log(ctrl.isRunning);
 console.log(ctrl.isPaused);
 console.log(ctrl.isFinished);
 ```
+
+`reset()` stops the controller without restarting it; `every()` and `everyRaf()`
+also accept `reset(true)` to restart. After `after().reset()`, call `resume()`
+to run again.
 
 Shared by `after()`, `every()`, `afterRaf()`, `everyRaf()`. All controllers are pause-safe (paused time does not count), cancel-safe, monotonic-time based, and `AbortSignal`-aware where supported.
 
@@ -362,6 +383,7 @@ If already aborted at creation time, no work is scheduled.
 
 ```js
 import {
+  parseDuration,
   after,
   every,
   debounce,
@@ -419,7 +441,7 @@ Measured for a single `after()` call in a typical browser bundler (esbuild, mini
 | 0.0.19 default (`import { after } from 'timeout-flow'`) | 1199 bytes |
 | 0.0.19 subpath (`import { after } from 'timeout-flow/after'`) | 1199 bytes |
 
-For unbundled `<script type="module">` consumption of the full kit, use the **`timeout-flow/min`** subpath, which points at the pre-built minified IIFE.
+For unbundled `<script type="module">` consumption of the full kit, use the **`timeout-flow/min`** subpath, which points at the pre-built minified ESM bundle.
 
 ### Clean signatures
 
@@ -432,6 +454,7 @@ after(done, '1s');
 ```
 
 This applies to `after()`, `every()`, `debounce()`, `throttle()`. Use whichever reads best in your codebase.
+The function-first form also accepts `(fn, options?)`, defaulting the delay to 0 ms.
 
 ### Philosophy
 

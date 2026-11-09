@@ -1,19 +1,4 @@
 /**
- * Resolves flexible (fn, delay) or (delay, fn) inputs.
- *
- * NOTE: This helper is intentionally strict:
- * - It requires an explicit delay (2-arg form).
- * - Use `resolveDelayFnOptions()` for overloads that allow `(fn, options)` or default delays.
- *
- * @param {Function|string|number} a - function or duration
- * @param {Function|string|number} b - function or duration
- * @returns {{ fn: Function, delay: number }}
- */
-export function resolveDelayAndFn(a: Function | string | number, b: Function | string | number): {
-    fn: Function;
-    delay: number;
-};
-/**
  * Resolves flexible overloads and returns `{ fn, delay, options }`.
  *
  * Supported forms:
@@ -36,3 +21,5 @@ export function resolveDelayFnOptions<O extends Record<string, any>>(a: Function
     delay: number;
     options: O;
 };
+
+export const isPlainOptions: (v: any) => boolean;

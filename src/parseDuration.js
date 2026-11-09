@@ -40,8 +40,5 @@ export function parseDuration(input) {
     case 's': return value * 1000;
     case 'm': return value * 60_000;
     case 'h': return value * 3_600_000;
-    default:
-      // Should be unreachable due to regex, but keeps function total.
-      throw new Error(`Unsupported duration unit: "${unit}"`);
   }
 }

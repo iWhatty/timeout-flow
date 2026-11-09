@@ -12,6 +12,7 @@ export class TimerBase {
   #startTime = null; // performance.now()
   #remaining;
   #timer = null;
+  #callback;
 
   #running = false;
   #paused = false;
@@ -68,7 +69,7 @@ export class TimerBase {
 
   /**
    * Resume the timer using the remaining time (or an override delay).
-   * @param {Function} callback - Called when time completes
+   * @param {Function} [callback] - Called when time completes; defaults to the previous callback
    * @param {number|null} [overrideDelay=null] - Optional custom delay in ms
    */
   resume(callback, overrideDelay = null) {
@@ -83,6 +84,9 @@ export class TimerBase {
     // Negative delays clamp to 0 like setTimeout (next macrotask)
     // instead of silently never firing.
     const delay = Math.max(0, rawDelay);
+
+    callback ??= this.#callback;
+    this.#callback = callback;
 
     // Important: remaining must reflect what we actually scheduled,
     // otherwise pause() math will be wrong when overrideDelay is used.
